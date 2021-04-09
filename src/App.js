@@ -1,121 +1,84 @@
-import React, { useReducer, useEffect } from "react";
-import './App.css';
+import React, { useState, useEffect } from "react";
+import Form from './components/Form';
+import FormTable from './components/FormTable';
+import './App.css'
+import styled from 'styled-components';
 
-const updateLS = (items, hours) => {
-  localStorage.setItem("item", JSON.stringify(items));
-  localStorage.setItem("hours", JSON.stringify(hours));
-};
+const AppContainer = styled.div`
+  width: 850px;
+  margin: 0 auto;
+`;
 
-const reducer = (state, action) => {
-  switch(action.type){
-    case "SET":{
-      return {...state, ...action.state};
-    }
-    case "ADD":{
-      const { items, totHours } = { ...state };
-      const { item } = action;
-      const newItem = [...items, item];
-      const newHours = totHours+ parseInt(item.time_spent);
+const TitleApp = styled.h1`
+  text-align: center;
+`;
 
-      updateLS(newItem, newHours);
+function App() {
+  const [activities, setActivities] = useState([]);
+  const [totHours, setTotHours] = useState(0);
 
-      return{
-        ...state,
-        items: newItem,
-        totHours: newHours,
-      };
-    }
+  useEffect(() => {
+    const initialActivities = JSON.parse(localStorage.getItem('workout-activities'));
+    const initialHours = JSON.parse(localStorage.getItem('workout-hours'));
 
-    case "DELETE":{
-      const { items, totHours } = { ...state };
-      const { item } = action;
-      const indexRemove = items.indexOf(item);
+    setActivities(initialActivities || []);
+    setTotHours(initialHours || 0);
+  }, [])
 
-      const newArrayItems = [
-        ...items.slice(0, indexRemove),
-        ...item.slice(indexRemove+1, items.length)
+  const saveToLocalStorage = (activities, totHours) => {
+
+    const activitiesJson = JSON.stringify(activities);
+    const hoursJson = JSON.stringify(totHours);
+
+    localStorage.setItem('workout-activities', activitiesJson);
+    localStorage.setItem('workout-hours', hoursJson);
+  };
+
+  const onSubmit = (event) => {
+    event.preventDefault();
+
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+    const itemAttributes = Object.fromEntries(formData);
+    const newActivities = [...activities, itemAttributes];
+
+    const newHours = totHours + parseInt(itemAttributes.time_spent)
+
+    setActivities(newActivities);
+    setTotHours(newHours);
+
+    saveToLocalStorage(newActivities);
+
+    form.reset();
+  }
+
+  const removeItem = (activity) => {
+    const indexToRemove = activities.indexOf(activity);
+
+    if (indexToRemove !== -1){
+      const newActivities = [
+        ...activities.slice(0, indexToRemove),
+        ...activities.slice(indexToRemove+1, activities.length)
       ];
 
-      const newHours = totHours - item.time_spent;
+      const newHours = totHours - activity.time_spent;
 
-      updateLS(newArrayItems, newHours);
+      setActivities(newActivities);
+      setTotHours(newHours);
 
-      return{
-        ...state,
-        items: newArrayItems,
-        totHours: newHours
-      };
-    }
-    
-    default:{
-      return state;
+      saveToLocalStorage(newActivities, newHours);
     }
   }
-};
-
-const Submit = (event) => {
-  event.preventDefault();
-
-  const form = event.currentTarget;
-  const formData = new FormData(form);
-  const obj = Object.fromEntries(formData);
-
-  dispatch({ type: "ADD", item: obj});
-
-  const exerciseList = [...state.items, obj];
-
-  localStorage
-}
-
-const initilizerState = { item: [], totHours: 0};
-
-const App = () => {
-  const [state, dispatch] = useReducer(reducer, initilizerState);
-  
-  useEffect(() => {
-    let existState = {};
-
-    if(localStorage.getItem("items")){
-      existState.items = JSON.parse(localStorage.getItem("items"));
-    }
-
-    if(localStorage.getItem("totHours")){
-      existState.totHours = JSON.parse(localStorage.getItem("totHours"));
-    }
-
-    dispatch({ type: "SET", state: existState});
-  }, []);
 
   return(
-    <div>
-      <form onSubmit={Submit}>
-        <input type="number" name="time_stemps" />
-        <select name="activity">
-          <option value="" disabled>Chose an activity</option>
-          <option value="Run">Run</option>
-          <option value="Swimming">Swimming</option>
-          <option value="Bike">Bike</option>
-        </select>
-        <input type="date" name="date" />
-        <button type="submit">Add</button>
-      </form>
+    <AppContainer>
+      <TitleApp>Workout Log</TitleApp>
+      <Form onSubmit={onSubmit}/>
+      <FormTable activities={activities} removeItem={removeItem}/>
 
-      <table>
-        <thead>
-          <tr>
-            <td>Timer</td>
-            <td>Type</td>
-            <td>Date</td>
-          </tr>
-        </thead>
-        <tbody>
-          <td></td>
-          <td></td>
-          <td></td>
-        </tbody>
-      </table>
-    </div>
+      <h1>{totHours} hour(s) of exercise</h1> 
+    </AppContainer>
   );
-};
+}
 
 export default App;
