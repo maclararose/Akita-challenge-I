@@ -1,30 +1,103 @@
-import React, { useState } from "react";
+import React, { useReducer, useEffect } from "react";
+import './App.css';
 
-function App() {
-  const [activities, setActivity] = useState([]);
+const updateLS = (items, hours) => {
+  localStorage.setItem("item", JSON.stringify(items));
+  localStorage.setItem("hours", JSON.stringify(hours));
+};
 
-  const onSubmit = (event) => {
-    event.preventDefault();
+const reducer = (state, action) => {
+  switch(action.type){
+    case "SET":{
+      return {...state, ...action.state};
+    }
+    case "ADD":{
+      const { items, totHours } = { ...state };
+      const { item } = action;
+      const newItem = [...items, item];
+      const newHours = totHours+ parseInt(item.time_spent);
+
+      updateLS(newItem, newHours);
+
+      return{
+        ...state,
+        items: newItem,
+        totHours: newHours,
+      };
+    }
+
+    case "DELETE":{
+      const { items, totHours } = { ...state };
+      const { item } = action;
+      const indexRemove = items.indexOf(item);
+
+      const newArrayItems = [
+        ...items.slice(0, indexRemove),
+        ...item.slice(indexRemove+1, items.length)
+      ];
+
+      const newHours = totHours - item.time_spent;
+
+      updateLS(newArrayItems, newHours);
+
+      return{
+        ...state,
+        items: newArrayItems,
+        totHours: newHours
+      };
+    }
     
-    console.log("Clicou");
+    default:{
+      return state;
+    }
   }
+};
 
-  return (
+const Submit = (event) => {
+  event.preventDefault();
+
+  const form = event.currentTarget;
+  const formData = new FormData(form);
+  const obj = Object.fromEntries(formData);
+
+  dispatch({ type: "ADD", item: obj});
+
+  const exerciseList = [...state.items, obj];
+
+  localStorage
+}
+
+const initilizerState = { item: [], totHours: 0};
+
+const App = () => {
+  const [state, dispatch] = useReducer(reducer, initilizerState);
+  
+  useEffect(() => {
+    let existState = {};
+
+    if(localStorage.getItem("items")){
+      existState.items = JSON.parse(localStorage.getItem("items"));
+    }
+
+    if(localStorage.getItem("totHours")){
+      existState.totHours = JSON.parse(localStorage.getItem("totHours"));
+    }
+
+    dispatch({ type: "SET", state: existState});
+  }, []);
+
+  return(
     <div>
-      <h1>Workout log</h1>
-
-      <form>
-        <h2>Insert an item</h2>
-        <input type="number" name="time_spent" />
+      <form onSubmit={Submit}>
+        <input type="number" name="time_stemps" />
         <select name="activity">
-          <option disabled>Chose an activity</option>
+          <option value="" disabled>Chose an activity</option>
           <option value="Run">Run</option>
           <option value="Swimming">Swimming</option>
           <option value="Bike">Bike</option>
         </select>
-        <input type="date" name="date"></input>
-
-        <button type="submit" onClick={onSubmit}>Add</button>
+        <input type="date" name="date" />
+        <button type="submit">Add</button>
       </form>
 
       <table>
@@ -33,23 +106,16 @@ function App() {
             <td>Timer</td>
             <td>Type</td>
             <td>Date</td>
-            <td>Action</td>
           </tr>
         </thead>
         <tbody>
-          {activities.map((activity, index) => {
-            <tr key={index}>
-              <td>{activity.time_spent}</td>
-              <td>{activity.type}</td>
-              <td>{activity.date}</td>
-            </tr>
-            })}
+          <td></td>
+          <td></td>
+          <td></td>
         </tbody>
       </table>
-
-      <h1>X hour(s) of Exercise</h1>
     </div>
   );
-}
+};
 
 export default App;
