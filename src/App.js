@@ -23,7 +23,7 @@ function App() {
 
     setActivities(initialActivities || []);
     setTotHours(initialHours || 0);
-  }, [])
+  },[]);
 
   const saveToLocalStorage = (activities, totHours) => {
 
@@ -41,13 +41,12 @@ function App() {
     const formData = new FormData(form);
     const itemAttributes = Object.fromEntries(formData);
     const newActivities = [...activities, itemAttributes];
-
-    const newHours = totHours + parseInt(itemAttributes.time_spent)
+    const newHours = totHours + parseInt(itemAttributes.time_spent);
 
     setActivities(newActivities);
     setTotHours(newHours);
 
-    saveToLocalStorage(newActivities);
+    saveToLocalStorage(newActivities, newHours);
 
     form.reset();
   }

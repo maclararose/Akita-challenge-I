@@ -12,7 +12,6 @@ const FormStyled = styled.form`
 `;
 
 const FormLegend = styled.legend`
-  // border: 1px solid #000;
   padding: 0 10px;
   width: auto;
 `;
@@ -27,6 +26,7 @@ const FormSubmit = ({ onSubmit }) => {
               <Col xs={2}>
                 <Form.Control type="number" name="time_spent" required />
               </Col>
+
               <Col xs={4}>
                 <Form.Control as="select" name="activity" required >
                   <option disabled selected>Chose an activity</option>
@@ -35,9 +35,11 @@ const FormSubmit = ({ onSubmit }) => {
                   <option value="Bike">Bike</option>
                 </Form.Control>
               </Col>
+
               <Col xs={4}>
                 <Form.Control type="date" name="date" required />
               </Col>
+
               <Col xs={1}>
                 <Button type="submit">Add</Button>
               </Col>
